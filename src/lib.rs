@@ -13,14 +13,13 @@ mod ffi {
         Float64,
     }
 
-    extern "Rust" {}
-
     // Unfortunately we could not automate this boilerplate with a macro
     extern "Rust" {
         type RsTensorU8;
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[u8];
         fn as_slice_mut(&mut self) -> &mut [u8];
+        unsafe fn rsU8_copy_from_ptr(shape: &[usize], ptr: *const u8) -> Box<RsTensorU8>;
     }
 
     extern "Rust" {
@@ -28,6 +27,8 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[i8];
         fn as_slice_mut(&mut self) -> &mut [i8];
+        unsafe fn rsI8_copy_from_ptr(shape: &[usize], ptr: *const i8) -> Box<RsTensorI8>;
+
     }
 
     extern "Rust" {
@@ -35,6 +36,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[u16];
         fn as_slice_mut(&mut self) -> &mut [u16];
+        unsafe fn rsU16_copy_from_ptr(shape: &[usize], ptr: *const u16) -> Box<RsTensorU16>;
     }
 
     extern "Rust" {
@@ -42,6 +44,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[i16];
         fn as_slice_mut(&mut self) -> &mut [i16];
+        unsafe fn rsI16_copy_from_ptr(shape: &[usize], ptr: *const i16) -> Box<RsTensorI16>;
     }
 
     extern "Rust" {
@@ -49,6 +52,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[u32];
         fn as_slice_mut(&mut self) -> &mut [u32];
+        unsafe fn rsU32_copy_from_ptr(shape: &[usize], ptr: *const u32) -> Box<RsTensorU32>;
     }
 
     extern "Rust" {
@@ -56,6 +60,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[i32];
         fn as_slice_mut(&mut self) -> &mut [i32];
+        unsafe fn rsI32_copy_from_ptr(shape: &[usize], ptr: *const i32) -> Box<RsTensorI32>;
     }
 
     extern "Rust" {
@@ -63,6 +68,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[u64];
         fn as_slice_mut(&mut self) -> &mut [u64];
+        unsafe fn rsU64_copy_from_ptr(shape: &[usize], ptr: *const u64) -> Box<RsTensorU64>;
     }
 
     extern "Rust" {
@@ -70,6 +76,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[i64];
         fn as_slice_mut(&mut self) -> &mut [i64];
+        unsafe fn rsI64_copy_from_ptr(shape: &[usize], ptr: *const i64) -> Box<RsTensorI64>;
     }
 
     extern "Rust" {
@@ -77,6 +84,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[f32];
         fn as_slice_mut(&mut self) -> &mut [f32];
+        unsafe fn rsF32_copy_from_ptr(shape: &[usize], ptr: *const f32) -> Box<RsTensorF32>;
     }
 
     extern "Rust" {
@@ -84,6 +92,7 @@ mod ffi {
         fn shape(&self) -> &[usize];
         fn as_slice(&self) -> &[f64];
         fn as_slice_mut(&mut self) -> &mut [f64];
+        unsafe fn rsF64_copy_from_ptr(shape: &[usize], ptr: *const f64) -> Box<RsTensorF64>;
     }
 }
 
@@ -104,6 +113,11 @@ macro_rules! newtypes {
                 pub fn as_slice_mut(&mut self) -> &mut [$typ] {
                     self.0.as_slice_mut()
                 }
+
+                pub unsafe fn copy_from_ptr(shape: &[usize], ptr: *const $typ) -> Self {
+                    Self(RsTensor::copy_from_ptr(shape, ptr))
+                }
+
             }
             // Implement conversion traits to/from inner type
             impl From<RsTensor<$typ>> for [<RsTensor $typ:upper>] {
@@ -111,6 +125,12 @@ macro_rules! newtypes {
             }
             impl From<[<RsTensor $typ:upper>]> for RsTensor<$typ> {
                 fn from(wrapped: [<RsTensor $typ:upper>]) -> Self { wrapped.0 }
+            }
+
+            // Had to make this wrapped in a box due to opaque type across FFI boundary
+            #[allow(non_snake_case)]
+            unsafe fn [<rs $typ:upper _copy_from_ptr>](shape: &[usize], ptr: *const $typ) -> Box<[<RsTensor $typ:upper>]> {
+                Box::new([<RsTensor $typ:upper>]::copy_from_ptr(shape, ptr))
             }
         }
     };
@@ -132,12 +152,6 @@ impl<T: Copy> RsTensor<T> {
         }
     }
 
-    pub unsafe fn copy_from_ptr(shape: &[usize], ptr: *const T) -> Self {
-        let view = ndarray::ArrayViewD::from_shape_ptr(shape, ptr);
-        let arr = view.to_owned();
-        Self(arr)
-    }
-
     pub fn shape(&self) -> &[usize] {
         self.0.shape()
     }
@@ -148,6 +162,12 @@ impl<T: Copy> RsTensor<T> {
 
     pub fn as_slice_mut(&mut self) -> &mut [T] {
         self.0.as_slice_mut().unwrap()
+    }
+
+    pub unsafe fn copy_from_ptr(shape: &[usize], ptr: *const T) -> Self {
+        let view = ndarray::ArrayViewD::from_shape_ptr(shape, ptr);
+        let arr = view.to_owned();
+        Self(arr)
     }
 }
 impl<T> From<RsTensor<T>> for ndarray::ArrayD<T> {
