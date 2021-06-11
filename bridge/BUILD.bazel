@@ -9,7 +9,7 @@ cc_library(
     hdrs = [
         "generated/xtensor_rust.rs.hpp",
     ],
-    deps = ["@cxx//:core-lib"],
+    deps = ["@cxx.rs//:cxx"],
 )
 
 cc_library(

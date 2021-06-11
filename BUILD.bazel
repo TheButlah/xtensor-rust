@@ -1,6 +1,14 @@
-exports_files(
-    [
-        "target/debug/libxtensor_rust.so",
+load("@rules_rust//rust:defs.bzl", "rust_library")
+
+rust_library(
+    name = "xtensor_rust",
+    srcs = glob(["src/**/*.rs"]),
+    proc_macro_deps = [
+        "//third_party/cargo:paste",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/cargo:ndarray",
+        "@cxx.rs//:cxx",
+    ],
 )

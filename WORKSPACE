@@ -2,29 +2,45 @@ workspace(name = "xtensor_rust")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+http_archive(
+    name = "rules_rust",
+    sha256 = "53d0a417fd945f5ca06eb9bb0c378c5f63338e93420e22e5fa6564dec9448d4b",
+    strip_prefix = "rules_rust-087bcab8154f5c0d79980ad32cb6ffb8158de649",
+    urls = [
+        # Master branch as of 2021-06-11
+        "https://github.com/bazelbuild/rules_rust/archive/087bcab8154f5c0d79980ad32cb6ffb8158de649.zip",
+    ],
+)
+
+load("@rules_rust//rust:repositories.bzl", "rust_repositories")
+
+rust_repositories(
+    edition = "2018",
+    version = "1.52.0",
+)
+
 # Dependencies for cxx
 
-# http_archive(
-#     name = "rules_rust",
-#     sha256 = "18c0a02a007cd26c3f5b4d21dc26a80af776ef755460028a796bc61c649fdf3f",
-#     strip_prefix = "rules_rust-467a301fd665db344803c1d8a2401ec2bf8c74ce",
-#     urls = [
-#         # Master branch as of 2021-04-23
-#         "https://github.com/bazelbuild/rules_rust/archive/467a301fd665db344803c1d8a2401ec2bf8c74ce.tar.gz",
-#     ],
-# )
-
-# load("@rules_rust//rust:repositories.bzl", "rust_repositories")
-
-# rust_repositories()
-
 http_archive(
-    name = "cxx",
-    build_file = "//third_party:cxx.BUILD",
+    name = "cxx.rs",
+    # patches = ["//:build.patch"],
+    repo_mapping = {"@third-party": "@cxx.rs_third-party"},
     sha256 = "ec47c18cffaedb56f31c9631e48950ac7f39012d0a4f9cc38536e74325a5dd99",
     strip_prefix = "cxx-1.0.49",
     url = "https://github.com/dtolnay/cxx/archive/refs/tags/1.0.49.tar.gz",
+    # build_file = "//third_party:cxx.BUILD",
 )
+
+load("@cxx.rs//tools/bazel:vendor.bzl", cxx_vendor = "vendor")
+
+cxx_vendor(
+    name = "cxx.rs_third-party",
+    lockfile = "@cxx.rs//third-party:Cargo.lock",
+)
+
+load("//third_party/cargo:crates.bzl", "raze_fetch_remote_crates")
+
+raze_fetch_remote_crates()
 
 # Dependencies for xtensor
 
