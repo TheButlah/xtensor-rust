@@ -1,0 +1,6 @@
+exports_files(
+    [
+        "target/debug/libxtensor_rust.so",
+    ],
+    visibility = ["//visibility:public"],
+)

@@ -1,17 +1,7 @@
-mod primitives;
-
-use ffi::DType;
 use paste::paste;
 
 #[cxx::bridge(namespace = "xtensor_rust::bridge")]
 mod ffi {
-
-    pub enum DType {
-        Int8,
-        UInt8,
-        Float32,
-        Float64,
-    }
 
     // Unfortunately we could not automate this boilerplate with a macro
     extern "Rust" {
@@ -128,6 +118,7 @@ macro_rules! newtypes {
             }
 
             // Had to make this wrapped in a box due to opaque type across FFI boundary
+            // Could not make an associated function, due to lack of support in CXX
             #[allow(non_snake_case)]
             unsafe fn [<rs $typ:upper _copy_from_ptr>](shape: &[usize], ptr: *const $typ) -> Box<[<RsTensor $typ:upper>]> {
                 Box::new([<RsTensor $typ:upper>]::copy_from_ptr(shape, ptr))

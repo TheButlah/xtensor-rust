@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+cc_library(
+    name = "xtensor_rust",
+    srcs = ["xtensor_rust.cpp"],
+    hdrs = ["xtensor_rust.hpp"],
+    copts = ["--std=c++17"],
+    deps = [
+        "//bridge",
+        "@xtensor",
+    ],
+)
+
+cc_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    copts = ["--std=c++17"],
+    deps = [":xtensor_rust"],
+)
