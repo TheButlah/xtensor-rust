@@ -6,7 +6,7 @@ cc_library(
     hdrs = ["xtensor_rust.hpp"],
     copts = ["--std=c++17"],
     deps = [
-        "//bridge",
+        "//cpp/bridge",
         "@xtensor",
     ],
 )

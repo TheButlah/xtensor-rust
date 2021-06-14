@@ -42,6 +42,12 @@ load("//third_party/cargo:crates.bzl", "raze_fetch_remote_crates")
 
 raze_fetch_remote_crates()
 
+http_archive(
+    name = "bazel_skylib",
+    strip_prefix = "bazel-skylib-c6f6b5425b232baf5caecc3aae31d49d63ddec03",
+    url = "https://github.com/bazelbuild/bazel-skylib/archive/c6f6b5425b232baf5caecc3aae31d49d63ddec03.zip",
+)
+
 # Dependencies for xtensor
 
 http_archive(

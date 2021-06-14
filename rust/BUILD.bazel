@@ -1,0 +1,20 @@
+load("@rules_rust//rust:defs.bzl", "rust_static_library")
+
+rust_static_library(
+    name = "xtensor_rust",
+    srcs = glob(["src/**/*.rs"]),
+    proc_macro_deps = [
+        "//rust/cargo:paste",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//rust/cargo:ndarray",
+        "@cxx.rs//:cxx",
+    ],
+)
+
+filegroup(
+    name = "xtensor_rust/src",
+    srcs = ["src/lib.rs"],
+    visibility = ["//cpp/bridge:__subpackages__"],
+)

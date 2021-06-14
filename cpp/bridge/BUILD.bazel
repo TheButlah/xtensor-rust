@@ -1,0 +1,56 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
+
+rust_src = "//rust:xtensor_rust/src"
+
+run_binary(
+    name = "generated_sources",
+    srcs = [rust_src],
+    outs = [
+        "generated.cpp",
+        "generated.hpp",
+    ],
+    args = [
+        "$(location %s)" % rust_src,
+        "-o",
+        "$(location :generated.hpp)",
+        "-o",
+        "$(location :generated.cpp)",
+    ],
+    tool = "@cxx.rs//:codegen",
+)
+
+cc_library(
+    name = "generated",
+    srcs = [
+        ":generated.cpp",
+    ],
+    hdrs = [
+        ":generated.hpp",
+    ],
+    deps = [
+        "//rust:xtensor_rust",
+        "@cxx.rs//:cxx",
+    ],
+)
+
+cc_library(
+    name = "bridge",
+    hdrs = [
+        "bridge.hpp",
+        "bridge.tpl.hpp",
+    ],
+    copts = ["--std=c++17"],
+    visibility = ["//visibility:public"],
+    deps = [":generated"],
+)
+
+cc_test(
+    name = "bridge_test",
+    srcs = ["bridge_test.cpp"],
+    copts = ["--std=c++17"],
+    deps = [
+        ":bridge",
+        "@catch2",
+    ],
+)

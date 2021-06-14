@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bridge/generated/xtensor_rust.rs.hpp"
+#include "cpp/bridge/generated.hpp"
 
 namespace xtensor_rust::bridge {
 
@@ -17,4 +17,4 @@ public:
 } // namespace xtensor_rust::bridge
 
 // Create specializations for all supported dtypes
-#include "bridge/bridge.tpl.hpp"
+#include "cpp/bridge/bridge.tpl.hpp"
